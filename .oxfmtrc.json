@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "**/*.md",
+    "**/*.css",
+    "**/*.pcss",
+    "**/*.sass",
+    "**/*.scss",
+    "**/*.less",
+    "**/*.svg",
+    "**/*.toml"
+  ],
+  "overrides": [
+    {
+      "files": ["*.{js,ts,jsx,tsx,svelte}"],
+      "options": { "tabWidth": 4 }
+    },
+    {
+      "files": ["*.{html}"],
+      "options": { "tabWidth": 2 }
+    }
+  ],
+  "svelte": true,
+  "trailingComma": "none",
+  "arrowParens": "avoid",
+  "htmlWhitespaceSensitivity": "ignore",
+  "bracketSameLine": true
+}
