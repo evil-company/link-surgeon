@@ -11,3 +11,4 @@ vite.config.ts.timestamp-*
 /.idea/workspace.xml
 /.idea/shelf/
 /.idea/dataSources.local.xml
+/notes.md
