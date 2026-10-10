@@ -14,9 +14,15 @@ importers:
       '@tauri-apps/plugin-global-shortcut':
         specifier: ~2.4.0
         version: 2.4.0
+      '@tauri-apps/plugin-log':
+        specifier: ~2.10.0
+        version: 2.10.0
       '@tauri-apps/plugin-opener':
         specifier: ^2
         version: 2.7.0
+      '@tauri-apps/plugin-positioner':
+        specifier: ~2.4.0
+        version: 2.4.0
     devDependencies:
       '@sveltejs/adapter-static':
         specifier: ^3.0.10
@@ -559,8 +565,14 @@ packages:
   '@tauri-apps/plugin-global-shortcut@2.4.0':
     resolution: {integrity: sha512-XBA4PcRjRdJBp/jwFxc5YZ/yKhZuslpOG/pGaNfhnRDVGMQfoXEKMv/6A6vjzfKLUxr8ml3ay8o2W8Rk6mHICA==}
 
+  '@tauri-apps/plugin-log@2.10.0':
+    resolution: {integrity: sha512-IHMspJx/fDA+8q8O6MTbrKffkemSDa1I5iXRhnLrLVnOd7xK4bAosyQbWcjnpPA7E+c6BMkpsE2kESHhkiBrDg==}
+
   '@tauri-apps/plugin-opener@2.7.0':
     resolution: {integrity: sha512-mBorYfVKh9Lt7s4ZFtKbMUTxBw+Y/sVmSlKCtkkoBgMTC/DIbt/kaPm67L/2djAUqDI1wbixy5OHHVmipjuGMw==}
+
+  '@tauri-apps/plugin-positioner@2.4.0':
+    resolution: {integrity: sha512-YWZ6ilSG1i94cR10iNUhIc6yosXfs9+tBcjC7hZH7vj/wAIq2QLzsi2PVeE55sNVXt/aH4Wa+QtkJDe+0NO07Q==}
 
   '@testing-library/svelte-core@1.1.3':
     resolution: {integrity: sha512-KkMAvXeWorxN2Yn0kdC1lfoAItxpoj4uOWzxK5leDrNxonLvS5nwBFvztrroyTszQ0Wf/EU6iLT8JhY5qcn22g==}
@@ -1355,7 +1367,15 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.12.1
 
+  '@tauri-apps/plugin-log@2.10.0':
+    dependencies:
+      '@tauri-apps/api': 2.12.1
+
   '@tauri-apps/plugin-opener@2.7.0':
+    dependencies:
+      '@tauri-apps/api': 2.12.1
+
+  '@tauri-apps/plugin-positioner@2.4.0':
     dependencies:
       '@tauri-apps/api': 2.12.1
 
