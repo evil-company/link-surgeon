@@ -18,7 +18,7 @@ fn disable_windows_transitions(window: &WebviewWindow) {
     }
 }
 
-/// TODO linux: linux version of flyout watch
+/// TODO linux: linux version of flyout watch if can
 /// TODO windows 10: check if flyout watch works on win10
 ///
 /// On Windows preloads on tray opening to make it feel instant.<br>
@@ -78,7 +78,7 @@ pub mod flyout_watch {
 pub fn set_windows_window_builder_settings(
     mut builder: WebviewWindowBuilder<Wry, AppHandle>,
 ) -> WebviewWindowBuilder<Wry, AppHandle> {
-    builder = builder.transparent(true);
+    builder = builder.transparent(false);
 
     if !setting!(gpu) {
         // other args are required as it overrides wry defaults

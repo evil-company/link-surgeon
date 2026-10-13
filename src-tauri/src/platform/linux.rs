@@ -7,7 +7,7 @@ use std::env::set_var;
 #[cfg(target_os = "linux")]
 pub fn disable_gpu() -> () {
     if !setting!(gpu) {
-        // TODO now: test on linux if gpu acceleration off works
+        // TODO linux: test on linux if gpu acceleration off works
         set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
     }
 }

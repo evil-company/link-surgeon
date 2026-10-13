@@ -165,7 +165,7 @@ fn build_main_window() -> tauri::Result<()> {
         .title(FULL_APP_NAME)
         .inner_size(400., 600.)
         .min_inner_size(400., 400.)
-        .background_color(Color(47, 47, 47, 255)) // TODO soon: make flash background color match ui
+        .background_color(Color(47, 47, 47, 255)) // TODO ui: make flash background color match ui
         .skip_taskbar(true)
         .always_on_top(true)
         .resizable(setting!(pin))
@@ -184,7 +184,7 @@ fn build_main_window() -> tauri::Result<()> {
 
     #[cfg(target_os = "windows")]
     set_windows_window_settings(&window);
-    // TODO maybe: maybe close tray immediately instead of window's delay as a minor aesthetic nit
+    // TODO other maybe: maybe close tray immediately instead of window's delay as a minor aesthetic nit
 
     // window events
     let w = window.clone();
