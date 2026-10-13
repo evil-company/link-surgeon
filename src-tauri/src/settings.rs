@@ -17,7 +17,7 @@ pub struct SettingsState(Mutex<Settings>);
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
-    pub pin: bool, // TODO pin: pin setting
+    pub pin: bool, // TODO ui: pin setting ui
     pub gpu: bool,
 }
 impl Default for Settings {

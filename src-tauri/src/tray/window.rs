@@ -5,7 +5,6 @@
 pub const MAIN_WINDOW_KEY: &str = "link-surgeon";
 const TASKBAR_MARGIN: i32 = 10;
 // px
-const CLOSE_DEBOUNCE: Duration = Duration::from_millis(200); // TODO test manual: need?
 const BLUR_CLOSE_DEBOUNCE: Duration = Duration::from_millis(200);
 const PREOPEN_TIMEOUT: Duration = Duration::from_secs(24);
 
@@ -53,19 +52,6 @@ fn place_above_taskbar(
     let y = (bottom - win.height as i32 - bottom_margin).max(area.position.y);
 
     window.set_position(PhysicalPosition::new(x, y))
-}
-
-#[derive(Default)]
-pub struct LastClosed(Mutex<Option<Instant>>);
-
-/// close debounce (namely so the window doesn't close from you clicking the tray icon)
-pub fn recently_closed() -> bool {
-    app()
-        .state::<LastClosed>()
-        .0
-        .lock()
-        .unwrap()
-        .is_some_and(|t| t.elapsed() < CLOSE_DEBOUNCE)
 }
 
 #[derive(Default)]
@@ -133,7 +119,6 @@ fn handle_window_focus(w: &WebviewWindow) -> () {
         let _ = w.set_focus();
         return;
     }
-    *app().state::<LastClosed>().0.lock().unwrap() = Some(Instant::now());
     let _ = w.close();
 }
 

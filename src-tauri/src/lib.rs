@@ -6,6 +6,7 @@ mod debug;
 mod settings;
 mod shortcuts;
 mod tray;
+mod clipboard;
 
 mod platform {
     #[cfg(target_os = "linux")]
@@ -23,13 +24,12 @@ use crate::tray::build_tray;
 use std::sync::OnceLock;
 use tauri::ipc::Invoke;
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime};
-use tray::window::{Building, LastClosed, LastShown, PageGate};
+use tray::window::{Building, LastShown, PageGate};
 use crate::tray::window::{LastWanted, MAIN_WINDOW_KEY};
 
 fn manage_state(app: &App) -> () {
     let _ = APP.set(app.handle().clone());
     app.manage(SettingsState::default());
-    app.manage(LastClosed::default());
     app.manage(LastShown::default());
     app.manage(LastWanted::default());
     app.manage(PageGate::default());

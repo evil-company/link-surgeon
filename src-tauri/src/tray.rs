@@ -26,7 +26,7 @@ fn tray_event_handler(_: &TrayIcon, e: TrayIconEvent) -> () {
             button: MouseButton::Left,
             button_state: MouseButtonState::Up,
             ..
-        } if !window::recently_closed() => window::show_main_window(Some(rect))
+        } => window::show_main_window(Some(rect))
             .unwrap_or_else(|e| log::error!("{IDEF}: failed to open window: {e}")),
         _ => {}
     }
