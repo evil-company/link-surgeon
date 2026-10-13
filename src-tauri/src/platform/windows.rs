@@ -78,7 +78,7 @@ pub mod flyout_watch {
 pub fn set_windows_window_builder_settings(
     mut builder: WebviewWindowBuilder<Wry, AppHandle>,
 ) -> WebviewWindowBuilder<Wry, AppHandle> {
-    builder = builder.transparent(true).decorations(false);
+    builder = builder.transparent(true);
 
     if !setting!(gpu) {
         // other args are required as it overrides wry defaults

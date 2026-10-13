@@ -3,8 +3,10 @@
 //! It's about ~40MB RAM tho literally doesn't matter since it's
 //! folded and uses 5MB RAM unless open anyway.
 
-// TODO now: settings json ; or tauri stor
-// TODO now: settings rust-to-js sync
+// TODO settings: settings json ; or tauri stor
+// TODO settings: make sure to load before everything else
+// TODO settings: settings rust-to-js sync
+// TODO ui pin setting ui: maximize and close from window decor (and replace said decor with custom css) ; and handle runtime change (rebuild?)
 
 use crate::app;
 use serde::{Deserialize, Serialize};
@@ -17,7 +19,7 @@ pub struct SettingsState(Mutex<Settings>);
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Settings {
-    pub pin: bool, // TODO ui: pin setting ui
+    pub pin: bool, // aka unwidget // TODO ui pin setting ui
     pub gpu: bool,
 }
 impl Default for Settings {

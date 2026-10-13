@@ -8,7 +8,7 @@ const TASKBAR_MARGIN: i32 = 10;
 const BLUR_CLOSE_DEBOUNCE: Duration = Duration::from_millis(200);
 const PREOPEN_TIMEOUT: Duration = Duration::from_secs(24);
 
-use crate::app;
+use crate::{app, setting, FULL_APP_NAME};
 use crate::debug::get_thread_id;
 #[cfg(target_os = "windows")]
 use crate::platform::windows::{set_windows_window_builder_settings, set_windows_window_settings};
@@ -59,7 +59,7 @@ pub struct LastShown(Mutex<Option<Instant>>);
 #[derive(Default)]
 pub struct LastWanted(Mutex<Option<Instant>>);
 
-/// namely used to reset focus on the window if it was just shown to prevent closing immediately
+/// prevents the user from double-clicking and spam clicking the window
 fn recently_shown() -> bool {
     app()
         .state::<LastShown>()
@@ -106,13 +106,14 @@ fn reveal(anchor: Option<Rect>) -> tauri::Result<()> {
 
     *app().state::<LastShown>().0.lock().unwrap() = Some(Instant::now());
     window.show()?;
+    window.unminimize()?; // prevents getting stuck in pin mode
     window.set_focus()?;
     Ok(())
 }
 
 /// closes the window if unfocused
 fn handle_window_focus(w: &WebviewWindow) -> () {
-    if !w.is_visible().unwrap_or(false) {
+    if setting!(pin) || !w.is_visible().unwrap_or(false) {
         return;
     }
     if recently_shown() {
@@ -161,14 +162,15 @@ fn handle_page_load() -> () {
 fn build_main_window() -> tauri::Result<()> {
     // build config
     let builder = WebviewWindowBuilder::new(app(), MAIN_WINDOW_KEY, WebviewUrl::default())
-        .title("Settings")
+        .title(FULL_APP_NAME)
         .inner_size(400., 600.)
         .min_inner_size(400., 400.)
         .background_color(Color(47, 47, 47, 255)) // TODO soon: make flash background color match ui
         .skip_taskbar(true)
         .always_on_top(true)
-        .resizable(false)
+        .resizable(setting!(pin))
         .visible(false)
+        .decorations(setting!(pin))
         .on_page_load(|_, payload| {
             if let PageLoadEvent::Finished = payload.event() {
                 handle_page_load();
@@ -182,7 +184,6 @@ fn build_main_window() -> tauri::Result<()> {
 
     #[cfg(target_os = "windows")]
     set_windows_window_settings(&window);
-    // TODO pin setting: make depend on widget setting? no need if always on on decorate window? would be decorated?
     // TODO maybe: maybe close tray immediately instead of window's delay as a minor aesthetic nit
 
     // window events
