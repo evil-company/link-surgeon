@@ -8,11 +8,11 @@ const TASKBAR_MARGIN: i32 = 10;
 const BLUR_CLOSE_DEBOUNCE: Duration = Duration::from_millis(200);
 const PREOPEN_TIMEOUT: Duration = Duration::from_secs(24);
 
-use crate::{app, setting, FULL_APP_NAME};
 use crate::debug::get_thread_id;
 #[cfg(target_os = "windows")]
 use crate::platform::windows::{set_windows_window_builder_settings, set_windows_window_settings};
 use crate::IDEF;
+use crate::{app, setting, FULL_APP_NAME};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -168,8 +168,8 @@ fn build_main_window() -> tauri::Result<()> {
         .background_color(Color(47, 47, 47, 255)) // TODO ui: make flash background color match ui
         .skip_taskbar(true)
         .always_on_top(true)
-        .resizable(setting!(pin))
         .visible(false)
+        .resizable(setting!(pin))
         .decorations(setting!(pin))
         .on_page_load(|_, payload| {
             if let PageLoadEvent::Finished = payload.event() {
@@ -255,4 +255,13 @@ pub fn show_main_window(anchor: Option<Rect>) -> tauri::Result<()> {
         g.pending = Some(anchor);
         Ok(())
     }
+}
+
+pub fn set_main_window_pin(pin: bool) -> Result<(), String> {
+    let Some(window) = app().get_webview_window(MAIN_WINDOW_KEY) else {
+        return Err(format!("{IDEF}: tried to set pin without main window existing, pin: {pin}"))
+    };
+
+    window.set_decorations(pin).map_err(|e| e.to_string())?;
+    window.set_resizable(pin).map_err(|e| e.to_string())
 }

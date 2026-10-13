@@ -1,5 +1,7 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
+    import { listen } from "@tauri-apps/api/event";
+    import { onMount } from "svelte";
 
     let name = $state("");
     let greetMsg = $state("");
@@ -7,11 +9,24 @@
     async function greet(event: Event) {
         event.preventDefault();
         // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-        greetMsg = await invoke("greet", { name });
+        greetMsg = await invoke("set_settings", { patch: { pin: true } });
     }
+
+    // TODO settings: settings proper
+    // TODO settings: debug settings category
+    // TODO maybe (overkill?): make settings seamless to save the user a grand total of 2 clicks
+    let requiresReopen = $state(false);
+    onMount(async () => {
+        await listen<boolean>("requires_reopen", e => {
+            requiresReopen = e.payload;
+        });
+    });
 </script>
 
 <main class="container">
+    {#if requiresReopen}
+        <p>warn: you need to reopen the app</p>
+    {/if}
     <h1>Welcome to Tauri + Svelte</h1>
 
     <div class="row">
@@ -32,6 +47,7 @@
         <button type="submit">Greet</button>
     </form>
     <p>{greetMsg}</p>
+    <button onclick={greet}>hi</button>
 </main>
 
 <style>

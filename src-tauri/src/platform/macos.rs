@@ -6,5 +6,7 @@ use crate::app;
 /// TODO macos: test autostart
 #[cfg(target_os = "macos")]
 fn set_macos_activation_policy() -> () {
-    app().set_activation_policy(tauri::ActivationPolicy::Accessory).unwrap();
+    app()
+        .set_activation_policy(tauri::ActivationPolicy::Accessory)
+        .unwrap();
 }

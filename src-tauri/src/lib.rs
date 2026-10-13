@@ -1,12 +1,12 @@
 pub const IDEF: &str = "TDSL";
 pub const FULL_APP_NAME: &str = "They Did Surgery on a Link";
 
-mod commands;
+mod autostart;
+mod clipboard;
 mod debug;
 mod settings;
 mod shortcuts;
 mod tray;
-mod clipboard;
 
 mod platform {
     #[cfg(target_os = "linux")]
@@ -17,18 +17,20 @@ mod platform {
     pub mod windows;
 }
 
+use crate::autostart::set_autostart;
 use crate::debug::{get_thread_id, start_watchdog};
 #[cfg(target_os = "windows")]
 use crate::platform::windows::flyout_watch;
-use crate::settings::SettingsState;
+use crate::settings::{setup_settings, Settings, SettingsState};
 use crate::shortcuts::init_shortcuts;
 use crate::tray::build_tray;
+use crate::tray::window::{LastWanted, MAIN_WINDOW_KEY};
 use std::sync::OnceLock;
 use tauri::ipc::Invoke;
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime};
 use tray::window::{Building, LastShown, PageGate};
-use crate::tray::window::{LastWanted, MAIN_WINDOW_KEY};
 
+/// WARN: make sure this runs before almost everything
 fn manage_state(app: &App) -> () {
     let _ = APP.set(app.handle().clone());
     app.manage(SettingsState::default());
@@ -42,7 +44,9 @@ fn manage_state(app: &App) -> () {
 fn command_handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool {
     tauri::generate_handler![
         #[allow(unused_qualifications)]
-        commands::greet
+        settings::get_settings,
+        #[allow(unused_qualifications)]
+        settings::set_settings
     ]
 }
 
@@ -56,6 +60,8 @@ fn run_event_handler(_: &AppHandle, e: RunEvent) -> () {
         _ => {}
     }
 }
+
+//
 
 static APP: OnceLock<AppHandle> = OnceLock::new();
 
@@ -74,8 +80,9 @@ pub fn try_app() -> Option<&'static AppHandle> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _ar, _c| {
-            // ^ must always be the first plugin apparently
-            let _ = app.get_webview_window(MAIN_WINDOW_KEY)
+            // ^ should always be the first plugin apparently
+            let _ = app
+                .get_webview_window(MAIN_WINDOW_KEY)
                 .expect(&format!("{IDEF}: no main window"))
                 .set_focus();
         }))
@@ -85,13 +92,6 @@ pub fn run() {
             // state
             manage_state(&app);
 
-            // TODO now: handle macos from example (can't test)
-            // TODO now: pin button to windoify with detailed settings for each disallow
-
-            // platform
-            #[cfg(target_os = "linux")]
-            platform::linux::disable_gpu();
-
             // debug/log
             #[cfg(debug_assertions)]
             log::debug!(
@@ -100,7 +100,20 @@ pub fn run() {
             );
             start_watchdog();
 
-            // platform again
+            // autostart
+            autostart::setup_autostart()?;
+            set_autostart(setting!(autostart));
+
+            // settings
+            setup_settings()?;
+
+            // TODO now: handle macos from example (can't test)
+            // TODO now: pin button to windoify with detailed settings for each disallow
+
+            // platform
+            #[cfg(target_os = "linux")]
+            platform::linux::disable_gpu();
+
             #[cfg(target_os = "windows")]
             flyout_watch::start();
 
