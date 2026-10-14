@@ -11,13 +11,14 @@
 // TODO settings: settings rust-to-js sync
 // TODO ui pin setting ui: maximize and close from window decor (and replace said decor with custom css) ; and handle runtime change (rebuild?)
 
-use crate::IDEF;
 use crate::app;
+use crate::autostart::toggle_autostart;
+use crate::tray::window::toggle_main_window_pin;
+use crate::utils::log_err;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{Emitter, Manager};
-use crate::autostart::set_autostart;
-use crate::tray::window::set_main_window_pin;
+use crate::clipboard::toggle_clipboard_watcher;
 
 /// WARN: runs a whole bunch of side effects, make sure their dependents are initialized first
 pub fn setup_settings() -> Result<(), String> {
@@ -64,20 +65,16 @@ macro_rules! settings {
     }}
 }
 
-fn log_err<E: std::fmt::Display>(what: &str, r: Result<(), E>) {
-    if let Err(e) = r {
-        log::error!("{IDEF}: {what} failed: {e}");
-    }
-}
-
 fn show_requires_reopen_warn() -> tauri::Result<()> {
     app().emit("requires_reopen", true)
 }
 
 settings! {
-    pin: bool = false => |v| log_err("main window pin", set_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
+    pin: bool = false => |v| log_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
     gpu: bool = true => |_| log_err("reopen warn", show_requires_reopen_warn()),
-    autostart: bool = true => |v| set_autostart(*v),
+    autostart: bool = true => |v| toggle_autostart(*v),
+    clipboard: bool = true => |v| toggle_clipboard_watcher(*v),
+    debug_log_foreground_class: bool = false,
 }
 
 impl Settings {
@@ -113,11 +110,13 @@ macro_rules! setting {
     ($field:ident = $value:expr) => {{
         let v = $value;
         $crate::settings::Settings::update(|s| s.$field = v)
-    }}
+    }};
 }
 
 #[tauri::command]
-pub fn get_settings() -> Settings { Settings::current() }
+pub fn get_settings() -> Settings {
+    Settings::current()
+}
 #[tauri::command]
 pub fn set_settings(patch: serde_json::Value) -> Result<(), String> {
     let mut result = Ok(());

@@ -30,6 +30,8 @@ windows = { version = "0.62.2", features = ["Win32_Graphics_Dwm", "Win32_UI_Acce
 ts-rs = "12.0.1"
 const_format = "0.2.36"
 json-patch = "4.2.0"
+clipboard-rs = "0.3.5"
+url = "2.5.8"
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

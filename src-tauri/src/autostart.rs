@@ -11,7 +11,7 @@ pub fn setup_autostart() -> tauri::Result<()> {
     Ok(())
 }
 
-pub fn set_autostart(enable: bool) -> () {
+pub fn toggle_autostart(enable: bool) -> () {
     use tauri_plugin_autostart::ManagerExt;
     let autostart_manager = crate::app().autolaunch();
     

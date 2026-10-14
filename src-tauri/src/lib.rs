@@ -7,21 +7,23 @@ mod debug;
 mod settings;
 mod shortcuts;
 mod tray;
+mod surgery;
+mod utils;
 
 mod platform {
     #[cfg(target_os = "linux")]
     pub mod linux;
-    // #[cfg(target_os = "macos")]
+    #[cfg(target_os = "macos")]
     pub mod macos;
     #[cfg(target_os = "windows")]
     pub mod windows;
 }
 
-use crate::autostart::set_autostart;
+use crate::autostart::toggle_autostart;
 use crate::debug::{get_thread_id, start_watchdog};
 #[cfg(target_os = "windows")]
 use crate::platform::windows::flyout_watch;
-use crate::settings::{setup_settings, Settings, SettingsState};
+use crate::settings::{setup_settings, SettingsState};
 use crate::shortcuts::init_shortcuts;
 use crate::tray::build_tray;
 use crate::tray::window::{LastWanted, MAIN_WINDOW_KEY};
@@ -29,15 +31,19 @@ use std::sync::OnceLock;
 use tauri::ipc::Invoke;
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime};
 use tray::window::{Building, LastShown, PageGate};
+use crate::clipboard::{toggle_clipboard_watcher, ClipboardShutdown, LastClipboardWrite};
 
 /// WARN: make sure this runs before almost everything
 fn manage_state(app: &App) -> () {
     let _ = APP.set(app.handle().clone());
     app.manage(SettingsState::default());
+    app.manage(LastClipboardWrite::default());
+    app.manage(ClipboardShutdown::default());
     app.manage(LastShown::default());
     app.manage(LastWanted::default());
     app.manage(PageGate::default());
     app.manage(Building::default());
+
 }
 
 /// tauri command registration goes here
@@ -100,9 +106,10 @@ pub fn run() {
             );
             start_watchdog();
 
-            // autostart
+            // setups
             autostart::setup_autostart()?;
-            set_autostart(setting!(autostart));
+            toggle_autostart(setting!(autostart));
+            toggle_clipboard_watcher(setting!(clipboard));
 
             // settings
             setup_settings()?;
@@ -110,6 +117,7 @@ pub fn run() {
             // TODO now: handle macos from example (can't test)
             // TODO now: pin button to windoify with detailed settings for each disallow
 
+            // tray/window
             // platform
             #[cfg(target_os = "linux")]
             platform::linux::disable_gpu();
@@ -117,7 +125,6 @@ pub fn run() {
             #[cfg(target_os = "windows")]
             flyout_watch::start();
 
-            // tray/window
             build_tray()?;
 
             // shortcuts

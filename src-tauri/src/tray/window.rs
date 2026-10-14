@@ -257,7 +257,7 @@ pub fn show_main_window(anchor: Option<Rect>) -> tauri::Result<()> {
     }
 }
 
-pub fn set_main_window_pin(pin: bool) -> Result<(), String> {
+pub fn toggle_main_window_pin(pin: bool) -> Result<(), String> {
     let Some(window) = app().get_webview_window(MAIN_WINDOW_KEY) else {
         return Err(format!("{IDEF}: tried to set pin without main window existing, pin: {pin}"))
     };

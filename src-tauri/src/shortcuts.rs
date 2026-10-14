@@ -1,12 +1,12 @@
 // TODO shortcuts: data driven
 
 use crate::app;
+use crate::utils::BoxErr;
 use crate::IDEF;
-use std::error::Error;
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 #[cfg(desktop)]
-pub fn init_shortcuts() -> Result<(), Box<dyn Error>> {
+pub fn init_shortcuts() -> Result<(), BoxErr> {
     let open_tray_shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::KeyO);
     app().plugin(
         tauri_plugin_global_shortcut::Builder::new()

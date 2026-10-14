@@ -27,7 +27,7 @@ fn disable_windows_transitions(window: &WebviewWindow) {
 #[cfg(target_os = "windows")]
 pub mod flyout_watch {
     use crate::tray::window::ensure_main_window;
-    use crate::{try_app, IDEF};
+    use crate::{setting, try_app, IDEF};
     use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::Accessibility::{SetWinEventHook, HWINEVENTHOOK};
     use windows::Win32::UI::WindowsAndMessaging::{
@@ -48,8 +48,10 @@ pub mod flyout_watch {
         let len = GetClassNameW(hwnd, &mut buf) as usize;
         let class = String::from_utf16_lossy(&buf[..len]);
 
-        #[cfg(debug_assertions)]
-        log::debug!("{IDEF} foreground class: {class}");
+        if setting!(debug_log_foreground_class) {
+            #[cfg(debug_assertions)]
+            log::debug!("{IDEF} foreground class: {class}");
+        }
 
         if class == "NotifyIconOverflowWindow" || class == "TopLevelWindowForOverflowXamlIsland" {
             if try_app().is_some() {
