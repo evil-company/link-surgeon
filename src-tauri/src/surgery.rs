@@ -11,6 +11,7 @@ use tauri::Manager;
 #[derive(Eq, Hash, PartialEq, Copy, Clone)]
 enum Site {
     YouTube,
+    Tumblr,
 }
 
 struct Rule {
@@ -19,17 +20,30 @@ struct Rule {
 }
 
 static SITE_RULES: LazyLock<HashMap<Site, Vec<Rule>>> = LazyLock::new(|| {
-    HashMap::from([(
-        Site::YouTube,
-        vec![Rule {
-            pattern: Regex::new(r"[&,?]si=.+").unwrap(),
-            replacement: String::from(""),
-        }],
-    )])
+    HashMap::from([
+        (
+            Site::YouTube,
+            vec![Rule {
+                pattern: Regex::new(r"[&,?]si=.+").unwrap(),
+                replacement: String::from(""),
+            }],
+        ),
+        (
+            Site::Tumblr,
+            vec![Rule {
+                pattern: Regex::new(r"[&,?]source=.+").unwrap(),
+                replacement: String::from(""),
+            }],
+        ),
+    ])
 });
 
-static SITE_MAP: LazyLock<HashMap<Vec<&str>, Site>> =
-    LazyLock::new(|| HashMap::from([(vec!["youtube.com", "youtu.be"], Site::YouTube)]));
+static SITE_MAP: LazyLock<HashMap<Vec<&str>, Site>> = LazyLock::new(|| {
+    HashMap::from([
+        (vec!["youtube.com", "youtu.be"], Site::YouTube),
+        (vec!["tumblr.com"], Site::Tumblr),
+    ])
+});
 
 fn apply_rules(link: &str, site: Site) -> String {
     let mut output = link.to_string();
@@ -54,7 +68,11 @@ fn identify_site(part: &str) -> Option<Site> {
 }
 
 fn site_part(parts: Vec<&str>) -> &str {
-    parts[2]
+    let output = parts[2];
+    if (&output[0..4]) == "www." {
+        return &output[4..]
+    }
+    output
 }
 
 /// cleans a link of tracking garbage
