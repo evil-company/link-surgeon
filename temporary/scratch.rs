@@ -29,18 +29,31 @@ lazy_static! {
                 }
             ])
         ]);
+        m
     };
 }
 
-// const SITE_MAP: HashMap<&str[], Site> = HashMap::from([
-//
-// ]);
-
-fn apply_rules(link: &str, site: Site) -> &str {
-
+lazy_static! {
+    static ref SITE_MAP: HashMap<Vec<&str>, Site> = {
+        let mut m = HashMap::from([
+            (["youtube.com", "youtu.be"], crate::Site::YouTube)
+        ]);
+        m
+    }
 }
 
-fn identify_site(part: &str) {}
+// fn apply_rules(link: &str, site: Site) -> &str {
+//
+// }
+
+fn identify_site(part: &str) -> Option<Site> {
+    for (key, value) in SITE_MAP {
+        if (key.contains(part)) {
+            return value;
+        }
+    }
+    return false;
+}
 
 fn site_part(parts: Vec<&str>) -> &str {
     return parts[2];

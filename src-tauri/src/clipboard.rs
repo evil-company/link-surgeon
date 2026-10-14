@@ -4,7 +4,10 @@
 use crate::surgery::they_did_surgery_on_a;
 use crate::utils::BoxErrSendSync;
 use crate::{app, setting, IDEF};
-use clipboard_rs::{Clipboard, ClipboardContext, ClipboardHandler, ClipboardWatcher, ClipboardWatcherContext, ContentFormat, WatcherShutdown};
+use clipboard_rs::{
+    Clipboard, ClipboardContext, ClipboardHandler, ClipboardWatcher, ClipboardWatcherContext,
+    ContentFormat, WatcherShutdown,
+};
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::Manager;
@@ -47,10 +50,7 @@ impl Handler {
         if !self.ctx.has(ContentFormat::Text) {
             return Ok(());
         }
-        for f in [
-            ContentFormat::Image,
-            ContentFormat::Files,
-        ] {
+        for f in [ContentFormat::Image, ContentFormat::Files] {
             if self.ctx.has(f) {
                 return Ok(());
             }
@@ -76,7 +76,11 @@ impl Handler {
             return Ok(());
         }
 
-        let tidy = they_did_surgery_on_a(link)?;
+        let option_tidy = they_did_surgery_on_a(link);
+        if option_tidy.is_none() {
+            return Ok(());
+        }
+        let tidy = option_tidy.unwrap();
         if tidy == link {
             return Ok(());
         }
@@ -107,7 +111,9 @@ impl ClipboardHandler for Handler {
             return;
         }
         if let Err(e) = self.perform_surgery() {
-            log::warn!("{IDEF}: surgery failed, they probably dropped the scalpel inside oh no: {e}")
+            log::warn!(
+                "{IDEF}: surgery failed, they probably dropped the scalpel inside oh no: {e}"
+            )
         }
     }
 }

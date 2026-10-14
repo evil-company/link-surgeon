@@ -2177,6 +2177,7 @@ dependencies = [
  "const_format",
  "json-patch",
  "log",
+ "regex",
  "serde",
  "serde_json",
  "tauri",
