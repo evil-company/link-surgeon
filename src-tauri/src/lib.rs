@@ -19,11 +19,10 @@ mod platform {
     pub mod windows;
 }
 
-use crate::autostart::toggle_autostart;
 use crate::debug::{get_thread_id, start_watchdog};
 #[cfg(target_os = "windows")]
 use crate::platform::windows::flyout_watch;
-use crate::settings::{setup_settings, SettingsState};
+use crate::settings::{setup_settings, Settings, SettingsState, Stage};
 use crate::shortcuts::init_shortcuts;
 use crate::tray::build_tray;
 use crate::tray::window::{LastWanted, MAIN_WINDOW_KEY};
@@ -31,7 +30,7 @@ use std::sync::OnceLock;
 use tauri::ipc::Invoke;
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime};
 use tray::window::{Building, LastShown, PageGate};
-use crate::clipboard::{toggle_clipboard_watcher, ClipboardShutdown, LastClipboardWrite};
+use crate::clipboard::{ClipboardShutdown, LastClipboardWrite};
 
 /// WARN: make sure this runs before almost everything
 fn manage_state(app: &App) -> () {
@@ -98,6 +97,10 @@ pub fn run() {
             // state
             manage_state(&app);
 
+            // settings
+            setup_settings()?;
+            Settings::current().apply_stage(Stage::ASAP);
+
             // debug/log
             #[cfg(debug_assertions)]
             log::debug!(
@@ -108,11 +111,7 @@ pub fn run() {
 
             // setups
             autostart::setup_autostart()?;
-            toggle_autostart(setting!(autostart));
-            toggle_clipboard_watcher(setting!(clipboard));
-
-            // settings
-            setup_settings()?;
+            Settings::current().apply_stage(Stage::AtSetups); // <-- runs some setups
 
             // TODO now: handle macos from example (can't test)
             // TODO now: pin button to windoify with detailed settings for each disallow

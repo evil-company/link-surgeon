@@ -14,7 +14,7 @@
 use crate::app;
 use crate::autostart::toggle_autostart;
 use crate::tray::window::toggle_main_window_pin;
-use crate::utils::log_err;
+use crate::utils::log_if_err;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{Emitter, Manager};
@@ -23,7 +23,6 @@ use crate::clipboard::toggle_clipboard_watcher;
 /// WARN: runs a whole bunch of side effects, make sure their dependents are initialized first
 pub fn setup_settings() -> Result<(), String> {
     // TODO settings: load from json or store here
-    Settings::current().apply_all();
 
     Ok(())
 }
@@ -31,8 +30,20 @@ pub fn setup_settings() -> Result<(), String> {
 #[derive(Default)]
 pub struct SettingsState(Mutex<Settings>);
 
+/// determines when to run the side effect of a setting on app setup
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Stage {
+    ASAP,
+    AtSetups,
+    Never,
+}
+
+/// The reopen arg warns the user (on the frontend) when the settings needs the window to rebuild
+/// The lambda arg is ran every time the setting changes
 macro_rules! settings {
-    ($( $name:ident : $ty:ty = $default:expr $(=> $effect:expr)?),* $(,)?) => {
+    ($( $name:ident : $ty:ty = $default:expr
+        => $stage:ident $(reopen = $reopen:literal)?, $effect:expr
+    ),* $(,)?) => {
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
     #[serde(rename_all = "camelCase", default)]
     pub struct Settings {
@@ -47,20 +58,32 @@ macro_rules! settings {
     }
 
     impl Settings {
+            pub fn apply_stage(&self, stage: Stage) {
+                $(
+                if Stage::$stage == stage {
+                    let f: fn(&$ty) = $effect;
+                    f(&self.$name);
+                }
+                )*
+            }
+
         fn apply_diff(&self, old: &Settings) {
+            #[allow(unused_mut)]
+            let mut needs_reopen = false;
             $( $(
             if self.$name != old.$name {
-                let f: fn(&$ty) = $effect;
-                f(&self.$name);
+                let reopen = false || $reopen ;
+                if reopen {
+                    needs_reopen = true;
+                } else {
+                    let f: fn(&$ty) = $effect;
+                    f(&self.$name);
+                }
             }
             )? )*
-        }
-
-        pub fn apply_all(&self) {
-            $( $(
-            let f: fn(&$ty) = $effect;
-            f(&self.$name);
-            )? )*
+            if needs_reopen {
+                log_if_err("reopen warn", show_requires_reopen_warn());
+            }
         }
     }}
 }
@@ -70,11 +93,11 @@ fn show_requires_reopen_warn() -> tauri::Result<()> {
 }
 
 settings! {
-    pin: bool = false => |v| log_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
-    gpu: bool = true => |_| log_err("reopen warn", show_requires_reopen_warn()),
-    autostart: bool = true => |v| toggle_autostart(*v),
-    clipboard: bool = true => |v| toggle_clipboard_watcher(*v),
-    debug_log_foreground_class: bool = false,
+    gpu: bool = true => ASAP reopen = true, |_| {},
+    pin: bool = false => Never, |v| log_if_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
+    autostart: bool = true => AtSetups, |v| toggle_autostart(*v),
+    clipboard: bool = true => AtSetups, |v| toggle_clipboard_watcher(*v),
+    debug_log_foreground_class: bool = false => ASAP, |_| {}
 }
 
 impl Settings {
@@ -98,6 +121,9 @@ impl Settings {
         Self::with(|s| s.clone())
     }
 }
+
+
+//
 
 /// Use for getting/setting a setting
 ///
