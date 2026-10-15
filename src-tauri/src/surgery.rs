@@ -1,12 +1,10 @@
 //!
 //! this it the operating room, it's surgin' time
 
-use crate::{app, IDEF};
-use log::kv::Source;
+use crate::{IDEF};
 use regex::Regex;
 use std::collections::HashMap;
-use std::sync::{LazyLock, Mutex};
-use tauri::Manager;
+use std::sync::{LazyLock};
 
 #[derive(Eq, Hash, PartialEq, Copy, Clone)]
 enum Site {

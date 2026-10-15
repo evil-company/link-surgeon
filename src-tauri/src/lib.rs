@@ -6,8 +6,8 @@ mod clipboard;
 mod debug;
 mod settings;
 mod shortcuts;
-mod tray;
 mod surgery;
+mod tray;
 mod utils;
 
 mod platform {
@@ -19,6 +19,7 @@ mod platform {
     pub mod windows;
 }
 
+use crate::clipboard::{ClipboardShutdown, LastClipboardWrite};
 use crate::debug::{get_thread_id, start_watchdog};
 #[cfg(target_os = "windows")]
 use crate::platform::windows::flyout_watch;
@@ -29,8 +30,8 @@ use crate::tray::window::{LastWanted, MAIN_WINDOW_KEY};
 use std::sync::OnceLock;
 use tauri::ipc::Invoke;
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime};
+use tauri_plugin_log::{Target, TargetKind};
 use tray::window::{Building, LastShown, PageGate};
-use crate::clipboard::{ClipboardShutdown, LastClipboardWrite};
 
 /// WARN: make sure this runs before almost everything
 fn manage_state(app: &App) -> () {
@@ -42,7 +43,6 @@ fn manage_state(app: &App) -> () {
     app.manage(LastWanted::default());
     app.manage(PageGate::default());
     app.manage(Building::default());
-
 }
 
 /// tauri command registration goes here
@@ -64,6 +64,23 @@ fn run_event_handler(_: &AppHandle, e: RunEvent) -> () {
         }
         _ => {}
     }
+}
+
+// log
+
+const LOG_FILE_NAME: &str = "tdsl";
+
+fn build_plugin_log<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
+    #[cfg(not(dev))]
+    let log_target = TargetKind::LogDir {
+        file_name: Some(LOG_FILE_NAME.into()),
+    };
+    #[cfg(dev)]
+    let log_target = TargetKind::Stdout;
+
+    tauri_plugin_log::Builder::new()
+        .targets([Target::new(log_target)])
+        .build()
 }
 
 //
@@ -92,7 +109,7 @@ pub fn run() {
                 .set_focus();
         }))
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_log::Builder::new().build())
+        .plugin(build_plugin_log())
         .setup(|app| {
             // state
             manage_state(&app);
