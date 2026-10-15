@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{Emitter, Manager};
 use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
+use crate::surgery::build_cleaner;
 
 /// WARN: runs a whole bunch of side effects, make sure their dependents are initialized first
 pub fn setup_settings() -> Result<(), String> {
@@ -98,7 +99,7 @@ settings! {
     pin: bool = false => Never, |v| log_if_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
     autostart: bool = true => AtSetups, |v| toggle_autostart(*v),
     clipboard: bool = true => AtSetups, |v| toggle_clipboard_watcher(*v),
-    skip_localhosts: bool = false => ASAP, |_| {},
+    skip_localhosts: bool = false => AtSetups, |_| log_if_err("rebuild cleaner", build_cleaner()),
 
     shortcut_hold_clipboard: Shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::Backquote) => Never, |_| {},
     hold_clipboard: bool = false => Never, |_| {},

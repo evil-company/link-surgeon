@@ -32,6 +32,7 @@ use tauri::ipc::Invoke;
 use tauri::{App, AppHandle, Manager, RunEvent, Runtime};
 use tauri_plugin_log::{Target, TargetKind};
 use tray::window::{Building, LastShown, PageGate};
+use crate::surgery::Cleaner;
 
 /// WARN: make sure this runs before almost everything
 fn manage_state(app: &App) {
@@ -39,6 +40,7 @@ fn manage_state(app: &App) {
     app.manage(SettingsState::default());
     app.manage(LastClipboardWrite::default());
     app.manage(ClipboardShutdown::default());
+    app.manage(Cleaner::default());
     app.manage(LastShown::default());
     app.manage(LastWanted::default());
     app.manage(PageGate::default());

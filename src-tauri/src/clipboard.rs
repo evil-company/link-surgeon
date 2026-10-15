@@ -64,24 +64,24 @@ impl Handler {
             return Ok(());
         };
 
-        // prevents our own write or dupes from doing anything
-        if app()
-            .state::<LastClipboardWrite>()
-            .0
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .as_deref()
-            == Some(text.as_str())
+        // prevents our own write
         {
-            return Ok(());
+            let state = app().state::<LastClipboardWrite>();
+            let mut last = state.0.lock().unwrap_or_else(|e| e.into_inner());
+            if last.as_deref() == Some(text.as_str()) {
+                *last = None;
+                return Ok(());
+            }
         }
 
         let option_tidy = they_did_surgery_on_a(link);
         if option_tidy.is_none() {
+            log::debug!("{IDEF}: surgery returned None for {text:?}");
             return Ok(());
         }
         let tidy = option_tidy.unwrap();
-        if tidy == link {
+        if tidy == text {
+            log::debug!("{IDEF}: already tidy {text:?}");
             return Ok(());
         }
 
@@ -108,6 +108,8 @@ impl Handler {
 impl ClipboardHandler for Handler {
     fn on_clipboard_change(&mut self) {
         if !setting!(clipboard) || setting!(hold_clipboard) {
+            #[cfg(debug_assertions)]
+            log::debug!("{IDEF}: skipped surgery");
             return;
         }
         if let Err(e) = self.perform_surgery() {

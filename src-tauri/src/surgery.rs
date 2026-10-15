@@ -1,11 +1,12 @@
 //!
 //! this it the operating room, it's surgin' time
 
-use crate::{setting, IDEF};
+use crate::{app, setting, IDEF};
 use clear_urls::{CleanResult, Error, UrlCleaner};
 use regex::Regex;
 use std::collections::HashMap;
-use std::sync::LazyLock;
+use std::sync::{LazyLock, RwLock};
+use tauri::Manager;
 
 #[derive(Eq, Hash, PartialEq, Copy, Clone)]
 enum Site {
@@ -75,12 +76,28 @@ fn site_part(parts: Vec<&str>) -> &str {
     output
 }
 
+#[derive(Default)]
+pub struct Cleaner(RwLock<Option<UrlCleaner>>);
+
+/// builds/rebuilds the library cleaner
+pub fn build_cleaner() -> Result<(), String> {
+    let new = UrlCleaner::from_embedded_rules()
+        .map_err(|e| e.to_string())?
+        .with_skip_local_hosts(setting!(skip_localhosts));
+    let state = app().state::<Cleaner>();
+    *state.0.write().unwrap_or_else(|e| e.into_inner()) = Some(new);
+    Ok(())
+}
+
+
 /// Does the surgery using the crate from crates.io that uses cleanurl's rules
 ///
 /// Our actually experienced surgeon (we're just amateurs)
-fn clean_with_lib(link: &str) -> Result<CleanResult, Error> {
-    let cleaner =
-        UrlCleaner::from_embedded_rules()?.with_skip_local_hosts(setting!(skip_localhosts));
+fn clean_with_lib(link: &str) -> Result<CleanResult, String> {
+    let err = format!("{IDEF} cleaner not ready");
+    let state = app().try_state::<Cleaner>().ok_or(&err)?;
+    let guard = state.0.read().unwrap_or_else(|e| e.into_inner());
+    let cleaner = guard.as_ref().ok_or(&err)?;
     Ok(cleaner.clean(link))
 }
 
