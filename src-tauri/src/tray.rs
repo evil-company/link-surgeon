@@ -14,7 +14,7 @@ use tauri::AppHandle;
 
 // events
 
-fn tray_event_handler(_: &TrayIcon, e: TrayIconEvent) -> () {
+fn tray_event_handler(_: &TrayIcon, e: TrayIconEvent) {
     match e {
         TrayIconEvent::Enter { .. } => {
             if let Err(e) = window::ensure_main_window() {
