@@ -107,7 +107,7 @@ impl Handler {
 
 impl ClipboardHandler for Handler {
     fn on_clipboard_change(&mut self) {
-        if !setting!(clipboard) {
+        if !setting!(clipboard) || setting!(hold_clipboard) {
             return;
         }
         if let Err(e) = self.perform_surgery() {

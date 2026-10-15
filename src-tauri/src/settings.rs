@@ -13,12 +13,13 @@
 
 use crate::app;
 use crate::autostart::toggle_autostart;
+use crate::clipboard::toggle_clipboard_watcher;
 use crate::tray::window::toggle_main_window_pin;
 use crate::utils::log_if_err;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{Emitter, Manager};
-use crate::clipboard::toggle_clipboard_watcher;
+use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
 
 /// WARN: runs a whole bunch of side effects, make sure their dependents are initialized first
 pub fn setup_settings() -> Result<(), String> {
@@ -67,20 +68,20 @@ macro_rules! settings {
                 )*
             }
 
-        fn apply_diff(&self, old: &Settings) {
+            fn apply_diff(&self, old: &Settings) {
             #[allow(unused_mut)]
             let mut needs_reopen = false;
-            $( $(
+            $(
             if self.$name != old.$name {
-                let reopen = false || $reopen ;
-                if reopen {
-                    needs_reopen = true;
-                } else {
-                    let f: fn(&$ty) = $effect;
-                    f(&self.$name);
-                }
+            let reopen = false $(|| $reopen)?;
+            if reopen {
+                needs_reopen = true;
+            } else {
+                let f: fn(&$ty) = $effect;
+                f(&self.$name);
             }
-            )? )*
+            }
+            )*
             if needs_reopen {
                 log_if_err("reopen warn", show_requires_reopen_warn());
             }
@@ -97,6 +98,13 @@ settings! {
     pin: bool = false => Never, |v| log_if_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
     autostart: bool = true => AtSetups, |v| toggle_autostart(*v),
     clipboard: bool = true => AtSetups, |v| toggle_clipboard_watcher(*v),
+    skip_localhosts: bool = false => ASAP, |_| {},
+
+    shortcut_hold_clipboard: Shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::Backquote) => Never, |_| {},
+    hold_clipboard: bool = false => Never, |_| {},
+
+    shortcut_open_widget: Shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT), Code::Backquote) => Never, |_| {},
+
     debug_log_foreground_class: bool = false => ASAP, |_| {}
 }
 
@@ -121,7 +129,6 @@ impl Settings {
         Self::with(|s| s.clone())
     }
 }
-
 
 //
 

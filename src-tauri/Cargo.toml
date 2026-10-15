@@ -33,6 +33,7 @@ json-patch = "4.2.0"
 clipboard-rs = "0.3.5"
 url = "2.5.8"
 regex = "1.13.1"
+clear-urls = { version = "1.0.0", features = ["fetch", "rustls"] }
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

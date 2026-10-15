@@ -34,7 +34,7 @@ use tauri_plugin_log::{Target, TargetKind};
 use tray::window::{Building, LastShown, PageGate};
 
 /// WARN: make sure this runs before almost everything
-fn manage_state(app: &App) -> () {
+fn manage_state(app: &App) {
     let _ = APP.set(app.handle().clone());
     app.manage(SettingsState::default());
     app.manage(LastClipboardWrite::default());
@@ -56,7 +56,7 @@ fn command_handler<R: Runtime>() -> impl Fn(Invoke<R>) -> bool {
 }
 
 /// run events
-fn run_event_handler(_: &AppHandle, e: RunEvent) -> () {
+fn run_event_handler(_: &AppHandle, e: RunEvent) {
     match e {
         // prevents the app from closing fully if you close the window
         RunEvent::ExitRequested { code, api, .. } if code.is_none() => {
@@ -68,6 +68,7 @@ fn run_event_handler(_: &AppHandle, e: RunEvent) -> () {
 
 // log
 
+#[cfg(not(dev))]
 const LOG_FILE_NAME: &str = "tdsl";
 
 fn build_plugin_log<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
@@ -105,14 +106,14 @@ pub fn run() {
             // ^ should always be the first plugin apparently
             let _ = app
                 .get_webview_window(MAIN_WINDOW_KEY)
-                .expect(&format!("{IDEF}: no main window"))
+                .unwrap_or_else(|| panic!("{IDEF}: no main window"))
                 .set_focus();
         }))
         .plugin(tauri_plugin_opener::init())
         .plugin(build_plugin_log())
         .setup(|app| {
             // state
-            manage_state(&app);
+            manage_state(app);
 
             // settings
             setup_settings()?;
