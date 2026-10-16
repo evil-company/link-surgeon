@@ -119,7 +119,7 @@ pub fn run() {
 
             // settings
             setup_settings()?;
-            Settings::current().apply_stage(Stage::ASAP);
+            Settings::current().apply_stage(Stage::Asap);
 
             // debug/log
             #[cfg(debug_assertions)]

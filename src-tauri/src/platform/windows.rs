@@ -2,8 +2,10 @@ use crate::setting;
 use tauri::{AppHandle, WebviewWindow, WebviewWindowBuilder, Wry};
 
 /// disables the window spawning transition
+///
+/// decided to keep them
 #[cfg(target_os = "windows")]
-fn disable_windows_transitions(window: &WebviewWindow) {
+fn _disable_windows_transitions(window: &WebviewWindow) {
     use windows::Win32::Graphics::Dwm::{DwmSetWindowAttribute, DWMWA_TRANSITIONS_FORCEDISABLED};
 
     let Ok(hwnd) = window.hwnd() else { return };
@@ -80,8 +82,6 @@ pub mod flyout_watch {
 pub fn set_windows_window_builder_settings(
     mut builder: WebviewWindowBuilder<Wry, AppHandle>,
 ) -> WebviewWindowBuilder<Wry, AppHandle> {
-    builder = builder.transparent(false);
-
     if !setting!(gpu) {
         // other args are required as it overrides wry defaults
 
@@ -95,8 +95,6 @@ pub fn set_windows_window_builder_settings(
 }
 
 #[cfg(target_os = "windows")]
-pub fn set_windows_window_settings(window: &WebviewWindow) -> () {
-    disable_windows_transitions(window);
-    let _ = window.set_shadow(false);
-    let _ = window_vibrancy::apply_blur(window, Some((0, 0, 0, 0)));
+pub fn _set_windows_window_settings(window: &WebviewWindow) {
+    //
 }

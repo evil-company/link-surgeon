@@ -10,7 +10,7 @@ const PREOPEN_TIMEOUT: Duration = Duration::from_secs(24);
 
 use crate::debug::get_thread_id;
 #[cfg(target_os = "windows")]
-use crate::platform::windows::{set_windows_window_builder_settings, set_windows_window_settings};
+use crate::platform::windows::{set_windows_window_builder_settings};
 use crate::IDEF;
 use crate::{app, setting, FULL_APP_NAME};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -142,7 +142,7 @@ fn handle_preopen_timeout() -> () {
 }
 
 /// allows the window to get revealed and reveals it
-fn handle_page_load() -> () {
+fn handle_page_load() {
     let exists = app().get_webview_window(MAIN_WINDOW_KEY).is_some();
     let pending = {
         let gate = app().state::<PageGate>();
@@ -159,15 +159,17 @@ fn handle_page_load() -> () {
     }
 }
 
+/// where the window is made, configure it here
 fn build_main_window() -> tauri::Result<()> {
     // build config
     let builder = WebviewWindowBuilder::new(app(), MAIN_WINDOW_KEY, WebviewUrl::default())
         .title(FULL_APP_NAME)
         .inner_size(400., 600.)
         .min_inner_size(400., 400.)
-        .background_color(Color(47, 47, 47, 255)) // TODO ui: make flash background color match ui
         .skip_taskbar(true)
         .always_on_top(true)
+        .transparent(true)
+        .shadow(setting!(pin))
         .visible(false)
         .resizable(setting!(pin))
         .decorations(setting!(pin))
@@ -182,8 +184,11 @@ fn build_main_window() -> tauri::Result<()> {
 
     let window = builder.build()?;
 
-    #[cfg(target_os = "windows")]
-    set_windows_window_settings(&window);
+    #[cfg(debug_assertions)]
+    if setting!(debug_start_with_devtools) {
+        window.open_devtools();
+    }
+
     // TODO other maybe: maybe close tray immediately instead of window's delay as a minor aesthetic nit
 
     // window events
@@ -244,6 +249,7 @@ pub fn ensure_main_window() -> tauri::Result<()> {
     result
 }
 
+/// main entrypoint for creating and showing the main window
 pub fn show_main_window(anchor: Option<Rect>) -> tauri::Result<()> {
     ensure_main_window()?;
     let gate = app().state::<PageGate>();

@@ -35,7 +35,7 @@ pub struct SettingsState(Mutex<Settings>);
 /// determines when to run the side effect of a setting on app setup
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Stage {
-    ASAP,
+    Asap,
     AtSetups,
     Never,
 }
@@ -43,13 +43,14 @@ pub enum Stage {
 /// The reopen arg warns the user (on the frontend) when the settings needs the window to rebuild
 /// The lambda arg is ran every time the setting changes
 macro_rules! settings {
-    ($( $name:ident : $ty:ty = $default:expr
+    ($( $(#[$meta:meta])* $name:ident : $ty:ty = $default:expr
         => $stage:ident $(reopen = $reopen:literal)?, $effect:expr
     ),* $(,)?) => {
-    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, ts_rs::TS)]
     #[serde(rename_all = "camelCase", default)]
+    #[ts(export)]
     pub struct Settings {
-        $(pub $name: $ty,)*
+        $( $(#[$meta])* pub $name: $ty, )*
     }
 
     impl Default for Settings {
@@ -95,18 +96,20 @@ fn show_requires_reopen_warn() -> tauri::Result<()> {
 }
 
 settings! {
-    gpu: bool = true => ASAP reopen = true, |_| {},
-    pin: bool = false => Never, |v| log_if_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui
+    gpu: bool = true => Asap reopen = true, |_| {},
+    pin: bool = true => Never, |v| log_if_err("main window pin", toggle_main_window_pin(*v)), // aka unwidget // TODO ui pin setting ui // TODO cfg: unpin
     autostart: bool = true => AtSetups, |v| toggle_autostart(*v),
     clipboard: bool = true => AtSetups, |v| toggle_clipboard_watcher(*v),
     skip_localhosts: bool = false => AtSetups, |_| log_if_err("rebuild cleaner", build_cleaner()),
 
+    #[ts(type = "string")]
     shortcut_hold_clipboard: Shortcut = Shortcut::new(Some(Modifiers::CONTROL), Code::Backquote) => Never, |_| {},
     hold_clipboard: bool = false => Never, |_| {},
-
+    #[ts(type = "string")]
     shortcut_open_widget: Shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT | Modifiers::SHIFT), Code::Backquote) => Never, |_| {},
 
-    debug_log_foreground_class: bool = false => ASAP, |_| {}
+    debug_log_foreground_class: bool = false => Asap, |_| {},
+    debug_start_with_devtools: bool = true => Asap, |_| {}
 }
 
 impl Settings {
